@@ -1,0 +1,87 @@
+pipeline {
+    agent any
+
+    environment {
+        AWS_REGION = 'us-east-1' // Change to your AWS region
+        ECR_REPO = 'your-ecr-repository'
+        IMAGE_TAG = "latest"
+    }
+
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git branch: 'main', url: 'https://github.com/your-repo.git'
+            }
+        }
+
+        stage('Build React Frontend') {
+            steps {
+                script {
+                    dir('frontend') {
+                        sh 'npm install'
+                        sh 'npm run build'
+                    }
+                }
+            }
+        }
+
+        stage('Build Spring Boot Backend') {
+            steps {
+                script {
+                    dir('backend') {
+                        sh './mvnw clean package -DskipTests'
+                    }
+                }
+            }
+        }
+
+        stage('Run Unit Tests') {
+            steps {
+                script {
+                    dir('backend') {
+                        sh './mvnw test'
+                    }
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh """
+                    docker build -t ${ECR_REPO}:${IMAGE_TAG} .
+                """
+            }
+        }
+
+        stage('Push to AWS ECR') {
+            steps {
+                withAWS(region: "${AWS_REGION}", credentials: 'aws-credentials-id') {
+                    sh """
+                        aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin <AWS_ACCOUNT_ID>.dkr.ecr.${AWS_REGION}.amazonaws.com
+                        docker tag ${ECR_REPO}:${IMAGE_TAG} <AWS_ACCOUNT_ID>.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${IMAGE_TAG}
+                        docker push <AWS_ACCOUNT_ID>.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${IMAGE_TAG}
+                    """
+                }
+            }
+        }
+
+        stage('Deploy to AWS EC2') {
+            steps {
+                sshagent(['ec2-ssh-credentials']) {
+                    sh """
+                        ssh -o StrictHostKeyChecking=no ec2-user@your-ec2-ip 'docker pull <AWS_ACCOUNT_ID>.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${IMAGE_TAG} && docker run -d -p 8080:8080 ${ECR_REPO}:${IMAGE_TAG}'
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Deployment successful! 🚀"
+        }
+        failure {
+            echo "Pipeline failed! Check logs."
+        }
+    }
+}
