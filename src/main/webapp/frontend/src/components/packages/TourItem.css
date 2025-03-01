@@ -1,0 +1,92 @@
+.card {
+	width: 100%;
+}
+
+.breadcrumb-container {
+	padding-top: 90px;
+}
+
+.package-main-header {
+	font-family: "Playfair Display", Helvetica, Arial, sans-serif !important;
+	color: #dd9933;
+}
+
+.package-sub-headers {
+	font-family: "Josefin Slab", Helvetica, Arial, sans-serif !important;
+	font-size: 15px;
+	line-height: 25px;
+	color: #7a7a7a;
+	font-weight: normal !important;
+}
+
+.tour-list-container {
+	padding-top: 100px;
+}
+
+.tour-item {
+	margin-bottom: 4.5rem;
+}
+
+.card-img-top {
+	height: 250px;
+}
+
+.btn {
+	padding-right: 10px;
+}
+
+.space {
+	display: flex;
+	flex-direction: row;
+	padding: 10px;
+	gap: 10px;
+}
+
+.button-30 {
+	align-items: center;
+	appearance: none;
+	background-color: #e4e4e4;
+	border-radius: 10px;
+	border-width: 0;
+	box-shadow: rgba(45, 35, 66, 0.4) 0 2px 4px, rgba(45, 35, 66, 0.3) 0 7px
+		13px -3px, #D6D6E7 0 -3px 0 inset;
+	box-sizing: border-box;
+	color: #36395A;
+	cursor: pointer;
+	display: inline-flex;
+	font-family: "JetBrains Mono", monospace;
+	height: 40px;
+	justify-content: center;
+	line-height: 1;
+	list-style: none;
+	overflow: hidden;
+	padding-left: 16px;
+	padding-right: 16px;
+	position: relative;
+	text-align: left;
+	text-decoration: none;
+	transition: box-shadow .15s, transform .15s;
+	user-select: none;
+	-webkit-user-select: none;
+	touch-action: manipulation;
+	white-space: nowrap;
+	will-change: box-shadow, transform;
+	font-size: 18px;
+}
+
+.button-30:focus {
+	box-shadow: #D6D6E7 0 0 0 1.5px inset, rgba(45, 35, 66, 0.4) 0 2px 4px,
+		rgba(45, 35, 66, 0.3) 0 7px 13px -3px, #D6D6E7 0 -3px 0 inset;
+}
+
+.button-30:hover {
+	box-shadow: rgba(45, 35, 66, 0.4) 0 4px 8px, rgba(45, 35, 66, 0.3) 0 7px
+		13px -3px, #D6D6E7 0 -3px 0 inset;
+	transform: translateY(-2px);
+}
+
+.button-30:active {
+	box-shadow: #D6D6E7 0 3px 7px inset;
+	transform: translateY(2px);
+}
+
