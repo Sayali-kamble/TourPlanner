@@ -3,8 +3,8 @@ pipeline {
 
     environment {
         AWS_REGION = 'us-east-1' // Change to your AWS region
-        ECR_REPO = 'your-ecr-repository'
-        IMAGE_TAG = "latest"
+        S3_BUCKET = 'your-s3-bucket-name' // Change to your S3 bucket
+        EC2_INSTANCE = 'your-ec2-instance-id' // Change to your EC2 instance ID
     }
 
     stages {
@@ -14,23 +14,10 @@ pipeline {
             }
         }
 
-        stage('Build React Frontend') {
+        stage('Build Backend') {
             steps {
                 script {
-                    dir('frontend') {
-                        sh 'npm install'
-                        sh 'npm run build'
-                    }
-                }
-            }
-        }
-
-        stage('Build Spring Boot Backend') {
-            steps {
-                script {
-                    dir('backend') {
-                        sh './mvnw clean package -DskipTests'
-                    }
+                    sh 'mvn clean package'
                 }
             }
         }
@@ -38,39 +25,46 @@ pipeline {
         stage('Run Unit Tests') {
             steps {
                 script {
-                    dir('backend') {
-                        sh './mvnw test'
+                    sh 'mvn test'
+                }
+            }
+        }
+
+        stage('Build React Frontend') {
+            steps {
+                script {
+                    sh '''
+                    cd frontend
+                    npm install
+                    npm run build
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy to S3 (Frontend)') {
+            steps {
+                script {
+                    sh '''
+                    aws s3 sync frontend/build s3://$S3_BUCKET --delete
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy to EC2 (Backend)') {
+            steps {
+                script {
+                    sshagent(['your-ec2-ssh-key']) {
+                        sh '''
+                        ssh -o StrictHostKeyChecking=no ec2-user@$EC2_INSTANCE <<EOF
+                        cd /home/ec2-user/tour-planner
+                        git pull origin main
+                        mvn clean package
+                        sudo systemctl restart tour-planner.service
+                        EOF
+                        '''
                     }
-                }
-            }
-        }
-
-        stage('Build Docker Image') {
-            steps {
-                sh """
-                    docker build -t ${ECR_REPO}:${IMAGE_TAG} .
-                """
-            }
-        }
-
-        stage('Push to AWS ECR') {
-            steps {
-                withAWS(region: "${AWS_REGION}", credentials: 'aws-credentials-id') {
-                    sh """
-                        aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin <AWS_ACCOUNT_ID>.dkr.ecr.${AWS_REGION}.amazonaws.com
-                        docker tag ${ECR_REPO}:${IMAGE_TAG} <AWS_ACCOUNT_ID>.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${IMAGE_TAG}
-                        docker push <AWS_ACCOUNT_ID>.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${IMAGE_TAG}
-                    """
-                }
-            }
-        }
-
-        stage('Deploy to AWS EC2') {
-            steps {
-                sshagent(['ec2-ssh-credentials']) {
-                    sh """
-                        ssh -o StrictHostKeyChecking=no ec2-user@your-ec2-ip 'docker pull <AWS_ACCOUNT_ID>.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:${IMAGE_TAG} && docker run -d -p 8080:8080 ${ECR_REPO}:${IMAGE_TAG}'
-                    """
                 }
             }
         }
@@ -78,10 +72,10 @@ pipeline {
 
     post {
         success {
-            echo "Deployment successful! 🚀"
+            echo 'Deployment successful!'
         }
         failure {
-            echo "Pipeline failed! Check logs."
+            echo 'Deployment failed!'
         }
     }
 }
