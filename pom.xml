@@ -57,11 +57,11 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<dependency>
-			<groupId>com.hasindu.application.frameworks</groupId>
+		<!--<dependency>
+			<groupId>com.tourplanner</groupId>
 			<artifactId>tour-planner</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
-		</dependency>
+		</dependency>-->
 	</dependencies>
 
 	<build>
