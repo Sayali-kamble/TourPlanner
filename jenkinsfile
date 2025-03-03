@@ -2,80 +2,53 @@ pipeline {
     agent any
 
     environment {
-        AWS_REGION = 'us-east-1' // Change to your AWS region
-        S3_BUCKET = 'your-s3-bucket-name' // Change to your S3 bucket
-        EC2_INSTANCE = 'your-ec2-instance-id' // Change to your EC2 instance ID
+        AWS_SERVER = "ec2-user@your-aws-ec2-ip"
+        BACKEND_DIR = "backend"
+        FRONTEND_DIR = "frontend"
     }
 
     stages {
         stage('Checkout Code') {
             steps {
-                git branch: 'main', url: 'https://github.com/your-repo.git'
+                git 'https://github.com/Sayali-kamble/TourPlanner.git'
             }
         }
 
-        stage('Build Backend') {
+        stage('Build Backend with Maven') {
             steps {
-                script {
-                    sh 'mvn clean package'
-                }
+                sh 'cd $BACKEND_DIR && mvn clean package'
             }
         }
 
         stage('Run Unit Tests') {
             steps {
-                script {
-                    sh 'mvn test'
-                }
+                sh 'cd $BACKEND_DIR && mvn test'
             }
         }
 
-        stage('Build React Frontend') {
+        stage('Build Frontend with React') {
             steps {
-                script {
+                sh '''
+                cd $FRONTEND_DIR
+                npm install
+                npm run build
+                '''
+            }
+        }
+
+        stage('Deploy to AWS EC2') {
+            steps {
+                sshagent(['EC2-SSH-Key']) {
                     sh '''
-                    cd frontend
-                    npm install
-                    npm run build
+                    scp -r $BACKEND_DIR/target/*.jar $AWS_SERVER:/home/ec2-user/tourplanner.jar
+                    scp -r $FRONTEND_DIR/build/* $AWS_SERVER:/var/www/html/
+                    ssh $AWS_SERVER <<EOF
+                    nohup java -jar /home/ec2-user/tourplanner.jar > /dev/null 2>&1 &
+                    EOF
                     '''
                 }
             }
-        }
-
-        stage('Deploy to S3 (Frontend)') {
-            steps {
-                script {
-                    sh '''
-                    aws s3 sync frontend/build s3://$S3_BUCKET --delete
-                    '''
-                }
-            }
-        }
-
-        stage('Deploy to EC2 (Backend)') {
-            steps {
-                script {
-                    sshagent(['your-ec2-ssh-key']) {
-                        sh '''
-                        ssh -o StrictHostKeyChecking=no ec2-user@$EC2_INSTANCE <<EOF
-                        cd /home/ec2-user/tour-planner
-                        git pull origin main
-                        mvn clean package
-                        sudo systemctl restart tour-planner.service
-                        EOF
-                        '''
-                    }
-                }
-            }
-        }
-    }
-
-    post {
-        success {
-            echo 'Deployment successful!'
-        }
-        failure {
-            echo 'Deployment failed!'
         }
     }
 }
+
