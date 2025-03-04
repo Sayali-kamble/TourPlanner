@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        AWS_REGION = 'us-east-1'
+        AWS_REGION = 'eu-north-1'
         S3_BUCKET = 'awstourbucket'
         INSTANCE_USER = 'ubuntu'
         INSTANCE_IP = '16.170.208.135'
