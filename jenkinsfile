@@ -2,50 +2,47 @@ pipeline {
     agent any
 
     environment {
-        AWS_SERVER = "ec2-user@your-aws-ec2-ip"
-        BACKEND_DIR = "backend"
-        FRONTEND_DIR = "frontend"
+        AWS_REGION = 'us-east-1'
+        S3_BUCKET = 'awstourbucket'
+        INSTANCE_USER = 'ubuntu'
+        INSTANCE_IP = '16.170.208.135'
     }
 
     stages {
-        stage('Checkout Code') {
+        stage('Clone Repository') {
             steps {
                 git 'https://github.com/Sayali-kamble/TourPlanner.git'
             }
         }
 
-        stage('Build Backend with Maven') {
+        stage('Build Backend') {
             steps {
-                sh 'cd $BACKEND_DIR && mvn clean package'
+                sh 'mvn clean package'
             }
         }
 
-        stage('Run Unit Tests') {
+        stage('Run Tests') {
             steps {
-                sh 'cd $BACKEND_DIR && mvn test'
+                sh 'mvn test'
             }
         }
 
-        stage('Build Frontend with React') {
+        stage('Build Frontend') {
             steps {
-                sh '''
-                cd $FRONTEND_DIR
-                npm install
-                npm run build
-                '''
+                dir('frontend') {
+                    sh 'npm install'
+                    sh 'npm run build'
+                }
             }
         }
 
-        stage('Deploy to AWS EC2') {
+        stage('Deploy to EC2') {
             steps {
-                sshagent(['EC2-SSH-Key']) {
-                    sh '''
-                    scp -r $BACKEND_DIR/target/*.jar $AWS_SERVER:/home/ec2-user/tourplanner.jar
-                    scp -r $FRONTEND_DIR/build/* $AWS_SERVER:/var/www/html/
-                    ssh $AWS_SERVER <<EOF
-                    nohup java -jar /home/ec2-user/tourplanner.jar > /dev/null 2>&1 &
-                    EOF
-                    '''
+                sshagent(credentials: ['ec2_ssh']) {
+                    sh """
+                        scp -o StrictHostKeyChecking=no target/*.jar ${INSTANCE_USER}@${INSTANCE_IP}:/home/ubuntu/app.jar
+                        ssh ${INSTANCE_USER}@${INSTANCE_IP} 'sudo systemctl restart myapp'
+                    """
                 }
             }
         }
