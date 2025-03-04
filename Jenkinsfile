@@ -5,7 +5,7 @@ pipeline {
         AWS_REGION = 'eu-north-1'
         S3_BUCKET = 'awstourbucket'
         INSTANCE_USER = 'ubuntu'
-        INSTANCE_IP = '16.170.208.135'
+        INSTANCE_IP = '13.61.100.4'
     }
 
     stages {
