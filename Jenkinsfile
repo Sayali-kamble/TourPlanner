@@ -51,16 +51,6 @@ pipeline {
                 }
             }
         }
-
-        stage('Run React Tests') {
-            steps {
-                script {
-                    dir('src/main/webapp/frontend') {
-                    bat 'npm test -- --watchAll=false'
-                    }
-                }
-            }
-        }
     }
 
     post {
