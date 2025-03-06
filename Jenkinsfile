@@ -16,6 +16,7 @@ pipeline {
         stage('Install Dependencies - React') {
             steps {
                 script {
+                    dir('frontend')
                     // Install Node.js dependencies for React
                     sh 'npm install'  // This assumes package.json is in the root or frontend folder
                 }
