@@ -2,50 +2,67 @@ pipeline {
     agent any
 
     environment {
-        AWS_REGION = 'eu-north-1'
-        S3_BUCKET = 'awstourbucket'
-        INSTANCE_USER = 'ubuntu'
-        INSTANCE_IP = '13.61.100.4'
+        SPRING_PROFILES_ACTIVE = 'prod'
+        MAVEN_HOME = tool name: 'Maven', type: 'ToolLocation'
     }
 
     stages {
-        stage('Clone Repository') {
+        stage('Checkout') {
             steps {
-                git 'https://github.com/Sayali-kamble/TourPlanner.git'
+                checkout scm
             }
         }
-
         stage('Build Backend') {
             steps {
-                sh 'mvn clean package'
+                script {
+                    // Backend build using Maven
+                    sh "'${MAVEN_HOME}/bin/mvn' clean install"
+                }
             }
         }
-
-        stage('Run Tests') {
+        stage('Run Backend Tests') {
             steps {
-                sh 'mvn test'
+                script {
+                    // Running JUnit and Mockito tests for backend
+                    sh "'${MAVEN_HOME}/bin/mvn' test"
+                }
             }
         }
-
         stage('Build Frontend') {
             steps {
                 dir('frontend') {
+                    // Building the React application
                     sh 'npm install'
                     sh 'npm run build'
                 }
             }
         }
-
-        stage('Deploy to EC2') {
+        stage('Run Frontend Tests') {
             steps {
-                sshagent(credentials: ['ec2_ssh']) {
-                    sh """
-                        scp -o StrictHostKeyChecking=no target/*.jar ${INSTANCE_USER}@${INSTANCE_IP}:/home/ubuntu/app.jar
-                        ssh ${INSTANCE_USER}@${INSTANCE_IP} 'sudo systemctl restart myapp'
-                    """
+                dir('frontend') {
+                    // Running frontend tests (using Jest or other test runners)
+                    sh 'npm test -- --coverage'
+                }
+            }
+        }
+        stage('Deploy') {
+            steps {
+                script {
+                    // Deploy step (adjust according to your deployment setup)
+                    echo 'Deploying the application'
                 }
             }
         }
     }
+
+    post {
+        success {
+            echo 'Build and tests succeeded!'
+        }
+        failure {
+            echo 'Build or tests failed.'
+        }
+    }
 }
+
 
