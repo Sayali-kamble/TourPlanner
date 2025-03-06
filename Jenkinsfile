@@ -27,7 +27,9 @@ pipeline {
         stage('Build React App') {
             steps {
                 script {
+                    dir('src/main/webapp/frontend') {
                     bat 'npm run build'
+                    }
                 }
             }
         }
@@ -51,7 +53,9 @@ pipeline {
         stage('Run React Tests') {
             steps {
                 script {
+                    dir('src/main/webapp/frontend') {
                     bat 'npm test -- --watchAll=false'
+                    }
                 }
             }
         }
