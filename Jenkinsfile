@@ -4,6 +4,7 @@ pipeline {
     environment {
         MAVEN_HOME = 'D:\\apache-maven-3.9.9'  
         NODE_HOME = 'D:\\nodejs' 
+        PATH = "${MAVEN_HOME}\\bin;${NODE_HOME};${env.PATH}"
     }
 
     stages {
@@ -16,8 +17,8 @@ pipeline {
         stage('Install Dependencies - React') {
             steps {
                 script {
-                    dir('src/main/webapp/frontend'){
-                    sh 'npm install'  
+                    dir('src/main/webapp') {  // Update path if needed
+                        bat 'npm install'
                     }
                 }
             }
@@ -26,8 +27,9 @@ pipeline {
         stage('Build React App') {
             steps {
                 script {
-                    // Build React app
-                    sh 'npm run build'
+                    dir('src/main/webapp') {
+                        bat 'npm run build'
+                    }
                 }
             }
         }
@@ -35,8 +37,7 @@ pipeline {
         stage('Build Spring Boot Project') {
             steps {
                 script {
-                    // Install Maven dependencies and build the Spring Boot project
-                    sh "${MAVEN_HOME}/bin/mvn clean install -DskipTests"
+                    bat '"%MAVEN_HOME%\\bin\\mvn" clean install -DskipTests'
                 }
             }
         }
@@ -44,8 +45,7 @@ pipeline {
         stage('Run JUnit Tests - Spring Boot') {
             steps {
                 script {
-                    // Run JUnit tests for Spring Boot
-                    sh "${MAVEN_HOME}/bin/mvn test"
+                    bat '"%MAVEN_HOME%\\bin\\mvn" test'
                 }
             }
         }
@@ -53,8 +53,9 @@ pipeline {
         stage('Run React Tests') {
             steps {
                 script {
-                    // Run unit tests for React frontend (if applicable)
-                    sh 'npm test -- --watchAll=false'
+                    dir('src/main/webapp') {
+                        bat 'npm test -- --watchAll=false'
+                    }
                 }
             }
         }
@@ -62,7 +63,6 @@ pipeline {
 
     post {
         always {
-            // Clean up or notifications
             echo 'Cleaning up...'
         }
         success {
