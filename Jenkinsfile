@@ -16,7 +16,7 @@ pipeline {
         stage('Install Dependencies - React') {
             steps {
                 script {
-                    dir('src/main/webapp'){
+                    dir('src/main/webapp/frontend'){
                     sh 'npm install'  
                     }
                 }
