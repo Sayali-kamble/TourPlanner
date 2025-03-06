@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     environment {
-        MAVEN_HOME = 'D:\apache-maven-3.9.9'  
-        NODE_HOME = 'D:\nodejs' 
+        MAVEN_HOME = 'D:\\apache-maven-3.9.9'  
+        NODE_HOME = 'D:\\nodejs' 
     }
 
     stages {
