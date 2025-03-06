@@ -1,9 +1,8 @@
 pipeline {
     agent any
 
-    environment {
-        SPRING_PROFILES_ACTIVE = 'prod'
-        MAVEN_HOME = tool name: 'Maven', type: 'ToolLocation'
+    tools {
+        maven 'Maven'  
     }
 
     stages {
