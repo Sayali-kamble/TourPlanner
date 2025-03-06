@@ -18,10 +18,8 @@ pipeline {
             steps {
                 script {
                     dir('src/main/webapp/frontend') {
-                withEnv(["CI=false"]) { 
                     bat 'npm run build'
-                }
-            }
+                    }
                 }
             }
         }
@@ -30,7 +28,9 @@ pipeline {
             steps {
                 script {
                     dir('src/main/webapp/frontend') {
-                    bat 'set CI=false && npm run build'
+                    withEnv(["CI=false"]) { 
+                    bat 'npm run build'
+                     }
                     }
                 }
             }
