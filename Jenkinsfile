@@ -18,8 +18,10 @@ pipeline {
             steps {
                 script {
                     dir('src/main/webapp/frontend') {
-                        bat 'npm install'
-                    }
+                withEnv(["CI=false"]) { 
+                    bat 'npm run build'
+                }
+            }
                 }
             }
         }
