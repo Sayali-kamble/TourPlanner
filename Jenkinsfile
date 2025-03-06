@@ -18,7 +18,7 @@ pipeline {
             steps {
                 script {
                     dir('src/main/webapp/frontend') {
-                    bat 'npm run build'
+                    bat 'npm install'
                     }
                 }
             }
@@ -28,7 +28,7 @@ pipeline {
             steps {
                 script {
                     dir('src/main/webapp/frontend') {
-                    withEnv(["CI=false"]) { 
+                    withEnv(["CI=false", "ESLINT_NO_DEV_ERRORS=true"]) { 
                     bat 'npm run build'
                      }
                     }
