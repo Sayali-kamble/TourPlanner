@@ -1,106 +1,74 @@
 pipeline {
     agent any
-    
+
     environment {
-        // Define environment variables for tools and paths
-        MAVEN_HOME = tool name: 'Maven', type: 'Tool'
-        JDK_HOME = tool name: 'JDK 17', type: 'Tool'  
-        NODE_HOME = tool name: 'NodeJS', type: 'Tool'
+        MAVEN_HOME = 'D:\apache-maven-3.9.9'  
+        NODE_HOME = 'D:\nodejs' 
     }
 
     stages {
-        
-        
         stage('Checkout') {
             steps {
-                checkout scm
+                git branch: 'master', url: 'https://github.com/Sayali-kamble/TourPlanner.git'  
             }
         }
-        
-        
-        stage('Install React Dependencies') {
+
+        stage('Install Dependencies - React') {
             steps {
                 script {
-                    // Install Node.js dependencies
-                    sh 'npm install --prefix frontend'
+                    // Install Node.js dependencies for React
+                    sh 'npm install'  // This assumes package.json is in the root or frontend folder
                 }
             }
         }
 
-        
-        stage('Build React') {
+        stage('Build React App') {
             steps {
                 script {
-                    // Build the React app
-                    sh 'npm run build --prefix frontend'
+                    // Build React app
+                    sh 'npm run build'
                 }
             }
         }
 
-       
-        stage('Test Backend') {
+        stage('Build Spring Boot Project') {
             steps {
                 script {
-                    // Run Maven tests (JUnit, Mockito)
-                    sh "${MAVEN_HOME}/bin/mvn clean test -DskipTests=false"
+                    // Install Maven dependencies and build the Spring Boot project
+                    sh "${MAVEN_HOME}/bin/mvn clean install -DskipTests"
                 }
             }
         }
 
-       
-        stage('Build Backend') {
+        stage('Run JUnit Tests - Spring Boot') {
             steps {
                 script {
-                    // Build the Spring Boot application
-                    sh "${MAVEN_HOME}/bin/mvn clean package -DskipTests=true"
+                    // Run JUnit tests for Spring Boot
+                    sh "${MAVEN_HOME}/bin/mvn test"
                 }
             }
         }
 
-        
-        stage('Integration Test') {
+        stage('Run React Tests') {
             steps {
                 script {
-                   
-                    sh "${MAVEN_HOME}/bin/mvn verify"
-                }
-            }
-        }
-
-        
-        stage('Deploy') {
-            steps {
-                script {
-                    
-                    sh "docker build -t my-backend -f backend/Dockerfile ."
-                    sh "docker run -d -p 8080:8080 my-backend"
-                    
-                   
-                    sh "cp -R frontend/build/* /path/to/deployment/directory"
-                }
-            }
-        }
-
-       
-        stage('Clean Up') {
-            steps {
-                script {
-                    cleanWs()
+                    // Run unit tests for React frontend (if applicable)
+                    sh 'npm test -- --watchAll=false'
                 }
             }
         }
     }
 
     post {
+        always {
+            // Clean up or notifications
+            echo 'Cleaning up...'
+        }
         success {
-            echo "Build and deploy were successful!"
+            echo 'Build and tests passed!'
         }
         failure {
-            echo "Build or deploy failed. Please check the logs."
-        }
-        always {
-            
-            junit '**/target/test-*.xml' // Example path for JUnit test results
+            echo 'Build or tests failed!'
         }
     }
 }
