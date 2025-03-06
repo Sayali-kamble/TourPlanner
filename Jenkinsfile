@@ -4,7 +4,7 @@ pipeline {
     environment {
         MAVEN_HOME = 'D:\\apache-maven-3.9.9'  
         NODE_HOME = 'D:\\nodejs' 
-        PATH = "${MAVEN_HOME}\\bin;${NODE_HOME};${env.PATH}"
+        PATH = "${MAVEN_HOME}\\bin;${NODE_HOME};C:\\Windows\\System32;C:\\Windows;C:\\Windows\\System32\\Wbem;C:\\Windows\\System32\\WindowsPowerShell\\v1.0;"
     }
 
     stages {
@@ -17,7 +17,7 @@ pipeline {
         stage('Install Dependencies - React') {
             steps {
                 script {
-                    dir('src/main/webapp') {  // Update path if needed
+                    dir('src/main/webapp/frontend') {
                         bat 'npm install'
                     }
                 }
@@ -27,9 +27,7 @@ pipeline {
         stage('Build React App') {
             steps {
                 script {
-                    dir('src/main/webapp') {
-                        bat 'npm run build'
-                    }
+                    bat 'npm run build'
                 }
             }
         }
@@ -37,7 +35,7 @@ pipeline {
         stage('Build Spring Boot Project') {
             steps {
                 script {
-                    bat '"%MAVEN_HOME%\\bin\\mvn" clean install -DskipTests'
+                    bat "\"%MAVEN_HOME%\\bin\\mvn\" clean install -DskipTests"
                 }
             }
         }
@@ -45,7 +43,7 @@ pipeline {
         stage('Run JUnit Tests - Spring Boot') {
             steps {
                 script {
-                    bat '"%MAVEN_HOME%\\bin\\mvn" test'
+                    bat "\"%MAVEN_HOME%\\bin\\mvn\" test"
                 }
             }
         }
@@ -53,9 +51,7 @@ pipeline {
         stage('Run React Tests') {
             steps {
                 script {
-                    dir('src/main/webapp') {
-                        bat 'npm test -- --watchAll=false'
-                    }
+                    bat 'npm test -- --watchAll=false'
                 }
             }
         }
