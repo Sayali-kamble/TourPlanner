@@ -23,7 +23,7 @@ pipeline {
             steps {
                 script {
                     dir('src/main/webapp/frontend') {
-                        bat 'npm install'
+                        bat '"D:\\nodejs\\npm.cmd" install'
                     }
                 }
             }
