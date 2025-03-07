@@ -4,7 +4,12 @@ pipeline {
     environment {
         MAVEN_HOME = 'D:\\apache-maven-3.9.9'  
         NODE_HOME = 'D:\\nodejs' 
-        PATH = "${MAVEN_HOME}\\bin;${NODE_HOME};C:\\Windows\\System32;C:\\Windows;C:\\Windows\\System32\\Wbem;C:\\Windows\\System32\\WindowsPowerShell\\v1.0;"
+        PATH = "${MAVEN_HOME}\\bin;${NODE_HOME}\\bin;C:\\Windows\\System32\\OpenSSH"
+
+        AWS_S3_BUCKET = 'awstripbucket'  
+        EC2_USER = 'ubuntu'
+        EC2_HOST = '13.61.100.178'
+        PRIVATE_KEY_PATH = 'C:\\SSHKeys\\trip.pem' 
     }
 
     stages {
@@ -18,7 +23,7 @@ pipeline {
             steps {
                 script {
                     dir('src/main/webapp/frontend') {
-                    bat 'npm install'
+                        bat 'npm install'
                     }
                 }
             }
@@ -28,9 +33,19 @@ pipeline {
             steps {
                 script {
                     dir('src/main/webapp/frontend') {
-                    withEnv(["CI=false", "ESLINT_NO_DEV_ERRORS=true"]) { 
-                    bat 'npm run build'
-                     }
+                        withEnv(["CI=false", "ESLINT_NO_DEV_ERRORS=true"]) { 
+                            bat 'npm run build'
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Deploy React to S3') {
+            steps {
+                script {
+                    dir('src/main/webapp/frontend/build') {
+                        bat 'aws s3 sync . s3://%AWS_S3_BUCKET% --delete'
                     }
                 }
             }
@@ -51,6 +66,23 @@ pipeline {
                 }
             }
         }
+
+        stage('Deploy Spring Boot to EC2') {
+            steps {
+                script {
+                    bat """
+                    echo Stopping any running application on EC2...
+                    ssh -o StrictHostKeyChecking=no -i "%PRIVATE_KEY_PATH%" %EC2_USER%@%EC2_HOST% "pkill -f 'java -jar' || true"
+
+                    echo Uploading JAR file to EC2...
+                    scp -o StrictHostKeyChecking=no -i "%PRIVATE_KEY_PATH%" target\\tourplanner-0.0.1-SNAPSHOT.jar %EC2_USER%@%EC2_HOST%:/home/ubuntu/tourplanner.jar
+
+                    echo Starting application...
+                    ssh -o StrictHostKeyChecking=no -i "%PRIVATE_KEY_PATH%" %EC2_USER%@%EC2_HOST% "nohup java -jar /home/ubuntu/tourplanner.jar > /home/ubuntu/tourplanner.log 2>&1 &"
+                    """
+                }
+            }
+        }
     }
 
     post {
@@ -58,10 +90,11 @@ pipeline {
             echo 'Cleaning up...'
         }
         success {
-            echo 'Build and tests passed!'
+            echo 'Build and deployment successful!'
         }
         failure {
-            echo 'Build or tests failed!'
+            echo 'Build or deployment failed!'
         }
     }
 }
+
