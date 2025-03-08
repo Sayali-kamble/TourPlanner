@@ -4,7 +4,7 @@ pipeline {
     environment {
         MAVEN_HOME = 'D:\\apache-maven-3.9.9'  
         NODE_HOME = 'D:\\nodejs' 
-        PATH = "${MAVEN_HOME}\\bin;${NODE_HOME}\\bin;C:\\Windows\\System32;C:\\Windows\\System32\\OpenSSH"
+        PATH = "${MAVEN_HOME}\\bin;${NODE_HOME}\\bin${env.PATH};C:\\Windows\\System32;C:\\Windows\\System32\\OpenSSH"
 
         AWS_S3_BUCKET = 'awstripbucket'  
         EC2_USER = 'ubuntu'
