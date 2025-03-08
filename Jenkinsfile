@@ -45,7 +45,7 @@ pipeline {
             steps {
                 script {
                     dir('src/main/webapp/frontend/build') {
-                        bat 'aws s3 sync . s3://%AWS_S3_BUCKET% --delete'
+                        bat 'aws s3 sync . s3://${env.AWS_S3_BUCKET} --delete'
                     }
                 }
             }
