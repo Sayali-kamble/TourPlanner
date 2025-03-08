@@ -45,7 +45,7 @@ pipeline {
             steps {
                 script {
                     dir('src/main/webapp/frontend/build') {
-                       bat '"C:\\Program Files\\Amazon\\AWSCLI\\bin\\aws" s3 sync . s3://%AWS_S3_BUCKET% --delete'
+                       bat '"C:\\Program Files\\Amazon\\AWSCLIV2\\aws.exe" s3 sync . s3://%AWS_S3_BUCKET% --delete'
                     }
                 }
             }
