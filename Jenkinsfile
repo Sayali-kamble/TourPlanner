@@ -45,7 +45,7 @@ pipeline {
             steps {
                 script {
                     dir('src/main/webapp/frontend/build') {
-                       bat '"C:\\Program Files\\Amazon\\AWSCLIV2\\aws.exe" s3 sync . s3://%AWS_S3_BUCKET% --delete'
+                        bat '"C:\\Program Files\\Amazon\\AWSCLIV2\\aws.exe" s3 sync . s3://%AWS_S3_BUCKET% --delete'
                     }
                 }
             }
@@ -68,26 +68,24 @@ pipeline {
         }
 
         stage('Deploy Spring Boot to EC2') {
-    steps {
-        script {
-            bat """
-            echo Stopping any running application on EC2...
-            ssh -o StrictHostKeyChecking=no -i "%PRIVATE_KEY_PATH%" %EC2_USER%@%EC2_HOST% "sudo kill \$(pgrep -f 'java -jar') || true"
+            steps {
+                script {
+                    bat """
+                    echo Stopping any running application on EC2...
+                    ssh -o StrictHostKeyChecking=no -i "%PRIVATE_KEY_PATH%" %EC2_USER%@%EC2_HOST% "sudo kill \$(pgrep -f 'java -jar') || true"
 
-            echo Uploading JAR file to EC2...
-            scp -o StrictHostKeyChecking=no -i "%PRIVATE_KEY_PATH%" target/tourplanner-0.0.1-SNAPSHOT.jar %EC2_USER%@%EC2_HOST%:/home/ubuntu/tourplanner.jar
+                    echo Uploading JAR file to EC2...
+                    scp -o StrictHostKeyChecking=no -i "%PRIVATE_KEY_PATH%" target/tourplanner-0.0.1-SNAPSHOT.jar %EC2_USER%@%EC2_HOST%:/home/ubuntu/tourplanner.jar
 
-            echo Starting application...
-            ssh -o StrictHostKeyChecking=no -i "%PRIVATE_KEY_PATH%" %EC2_USER%@%EC2_HOST% "nohup java -jar /home/ubuntu/tourplanner.jar > /home/ubuntu/tourplanner.log 2>&1 &"
+                    echo Starting application...
+                    ssh -o StrictHostKeyChecking=no -i "%PRIVATE_KEY_PATH%" %EC2_USER%@%EC2_HOST% "nohup java -jar /home/ubuntu/tourplanner.jar > /home/ubuntu/tourplanner.log 2>&1 &"
 
-            echo Deployment completed!
-            """
+                    echo Deployment completed!
+                    """
+                }
+            }
         }
-    }
-}
-
-        }
-    }
+    }  
 
     post {
         always {
@@ -101,4 +99,3 @@ pipeline {
         }
     }
 }
-
