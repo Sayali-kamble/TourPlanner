@@ -2,53 +2,38 @@ pipeline {
     agent any
 
     environment {
-        AWS_SERVER = "ec2-user@your-aws-ec2-ip"
-        BACKEND_DIR = "backend"
-        FRONTEND_DIR = "frontend"
+        JAVA_HOME = '/usr/lib/jvm/java-17-openjdk-amd64'
+        MAVEN_HOME = '/usr/share/maven'
+        EC2_USER = 'ubuntu'
+        EC2_HOST = '16.170.208.135'
+        AWS_KEY = '/home/jenkins/.ssh/tour.pem'
+        MONGO_URI = credentials('MONGO_ATLAS_URI')
     }
 
     stages {
-        stage('Checkout Code') {
+        stage('Checkout') {
             steps {
                 git 'https://github.com/Sayali-kamble/TourPlanner.git'
             }
         }
 
-        stage('Build Backend with Maven') {
+        stage('Build') {
             steps {
-                sh 'cd $BACKEND_DIR && mvn clean package'
+                sh 'mvn clean install'
             }
         }
 
-        stage('Run Unit Tests') {
+        stage('Test') {
             steps {
-                sh 'cd $BACKEND_DIR && mvn test'
+                sh 'mvn test'
             }
         }
 
-        stage('Build Frontend with React') {
+        stage('Deploy to AWS') {
             steps {
-                sh '''
-                cd $FRONTEND_DIR
-                npm install
-                npm run build
-                '''
-            }
-        }
-
-        stage('Deploy to AWS EC2') {
-            steps {
-                sshagent(['EC2-SSH-Key']) {
-                    sh '''
-                    scp -r $BACKEND_DIR/target/*.jar $AWS_SERVER:/home/ec2-user/tourplanner.jar
-                    scp -r $FRONTEND_DIR/build/* $AWS_SERVER:/var/www/html/
-                    ssh $AWS_SERVER <<EOF
-                    nohup java -jar /home/ec2-user/tourplanner.jar > /dev/null 2>&1 &
-                    EOF
-                    '''
-                }
+                sh 'scp -i $AWS_KEY target/tour-planner.jar $EC2_USER@$EC2_HOST:/home/ec2-user/'
+                sh 'ssh -i $AWS_KEY $EC2_USER@$EC2_HOST "nohup java -jar /home/ec2-user/tour-planner.jar > output.log 2>&1 &"'
             }
         }
     }
 }
-

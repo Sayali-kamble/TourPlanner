@@ -81,12 +81,12 @@ class Login extends Component{
                                 <form method="post">
                                     <div className="form-group">
                                         <label htmlFor="exampleInputEmail1">Username</label>
-                                        <input name="userName" type="text" name="userName" className="form-control" id="userName"
+                                        <input name="userName" type="text"  className="form-control" id="userName"
                                                aria-describedby="emailHelp" placeholder="Enter username" onChange={this.handleOnChange}/>
                                     </div>
                                     <div className="form-group">
                                         <label htmlFor="exampleInputEmail1">Password</label>
-                                        <input name="password" type="password" name="password" id="password" className="form-control"
+                                        <input name="password" type="password"  id="password" className="form-control"
                                                aria-describedby="emailHelp" placeholder="Enter Password" onChange={this.handleOnChange}/>
                                     </div>
                                     <div className="form-group">
