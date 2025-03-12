@@ -69,23 +69,39 @@ pipeline {
         }
 
         stage('Deploy Spring Boot to EC2') {
-            steps {
-                script {
-                    bat """
-                    echo Stopping any running application on EC2...
-                    ssh -o StrictHostKeyChecking=no -i "%PRIVATE_KEY%" %EC2_USER%@%EC2_HOST% "sudo kill \$(pgrep -f 'java -jar') || true"
+    steps {
+        script {
+            def privateKeyPath = "${WORKSPACE}\\ssh-key.pem"
 
-                    echo Uploading JAR file to EC2...
-                    scp -o StrictHostKeyChecking=no -i "%PRIVATE_KEY%" target/tourplanner-0.0.1-SNAPSHOT.jar %EC2_USER%@%EC2_HOST%:/home/ubuntu/tourplanner.jar
+            // Write the private key securely from Jenkins credentials
+            writeFile file: privateKeyPath, text: PRIVATE_KEY
 
-                    echo Starting application...
-                    ssh -o StrictHostKeyChecking=no -i "%PRIVATE_KEY%" %EC2_USER%@%EC2_HOST% "nohup java -jar /home/ubuntu/tourplanner.jar > /home/ubuntu/tourplanner.log 2>&1 &"
+            // Fix private key permissions (Windows-compatible)
+            bat """
+            icacls \"${privateKeyPath}\" /inheritance:r
+            icacls \"${privateKeyPath}\" /grant:r \"%USERNAME%:F\"
+            """
 
-                    echo Deployment completed!
-                    """
-                }
-            }
+            // Deploy to EC2
+            bat """
+            echo Stopping any running application on EC2...
+            ssh -o StrictHostKeyChecking=no -i \"${privateKeyPath}\" %EC2_USER%@%EC2_HOST% "sudo kill \$(pgrep -f 'java -jar') || true"
+
+            echo Uploading JAR file to EC2...
+            scp -o StrictHostKeyChecking=no -i \"${privateKeyPath}\" target/tourplanner-0.0.1-SNAPSHOT.jar %EC2_USER%@%EC2_HOST%:/home/ubuntu/tourplanner.jar
+
+            echo Starting application...
+            ssh -o StrictHostKeyChecking=no -i \"${privateKeyPath}\" %EC2_USER%@%EC2_HOST% "nohup java -jar /home/ubuntu/tourplanner.jar > /home/ubuntu/tourplanner.log 2>&1 &"
+
+            echo Deployment completed!
+            """
+
+            // Clean up the private key file after use
+            bat "del /F /Q \"${privateKeyPath}\""
         }
+    }
+}
+
     }  
 
     post {
