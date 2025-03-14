@@ -46,7 +46,7 @@ pipeline {
             steps {
                 script {
                     dir('src/main/webapp/frontend/build') {
-                        bat '"C:\\Program Files\\Amazon\\AWSCLIV2\\aws.exe" s3 sync . s3://%AWS_S3_BUCKET% --delete'
+                        bat '"C:\\Program Files\\Amazon\\AWSCLIV2\\aws.exe" s3 sync . s3://%AWS_S3_BUCKET% --region eu-north-1 --delete'
                     }
                 }
             }
@@ -73,10 +73,10 @@ pipeline {
         script {
             def privateKeyPath = "${WORKSPACE}\\ssh-key.pem"
 
-            // Write the private key securely from Jenkins credentials
-            writeFile file: privateKeyPath, text: PRIVATE_KEY
+            // Write the private key securely
+            writeFile file: privateKeyPath, text: PRIVATE_KEY.trim()
 
-            // Fix private key permissions (Windows-compatible)
+            // Set correct permissions on Windows
             bat """
             icacls \"${privateKeyPath}\" /inheritance:r
             icacls \"${privateKeyPath}\" /grant:r \"%USERNAME%:F\"
@@ -85,15 +85,13 @@ pipeline {
             // Deploy to EC2
             bat """
             echo Stopping any running application on EC2...
-            ssh -o StrictHostKeyChecking=no -i \"${privateKeyPath}\" %EC2_USER%@%EC2_HOST% "sudo kill \$(pgrep -f 'java -jar') || true"
-
+            ssh -o StrictHostKeyChecking=no -i \"${privateKeyPath}\" %EC2_USER%@%EC2_HOST% "sudo pkill -f 'tourplanner.jar' || true"
+            
             echo Uploading JAR file to EC2...
             scp -o StrictHostKeyChecking=no -i \"${privateKeyPath}\" target/tourplanner-0.0.1-SNAPSHOT.jar %EC2_USER%@%EC2_HOST%:/home/ubuntu/tourplanner.jar
 
             echo Starting application...
-            ssh -o StrictHostKeyChecking=no -i \"${privateKeyPath}\" %EC2_USER%@%EC2_HOST% "nohup java -jar /home/ubuntu/tourplanner.jar > /home/ubuntu/tourplanner.log 2>&1 &"
-
-            echo Deployment completed!
+            ssh -o StrictHostKeyChecking=no -i \"${privateKeyPath}\" %EC2_USER%@%EC2_HOST% "export MONGO_URI=${MONGO_URI} && nohup java -jar /home/ubuntu/tourplanner.jar > /home/ubuntu/tourplanner.log 2>&1 &"
             """
 
             // Clean up the private key file after use
@@ -101,7 +99,6 @@ pipeline {
         }
     }
 }
-
     }  
 
     post {
