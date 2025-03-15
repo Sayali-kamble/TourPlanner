@@ -8,7 +8,8 @@ pipeline {
 
         AWS_S3_BUCKET = 'awstripbucket'  
         EC2_USER = 'ubuntu'
-        EC2_HOST = '13.61.100.178'
+        EC2_HOST = '13.50.4.93'
+
         
         MONGO_URI = credentials('MONGO_ATLAS_URI')
     }
