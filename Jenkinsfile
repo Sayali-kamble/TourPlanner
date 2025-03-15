@@ -71,34 +71,22 @@ pipeline {
         stage('Deploy Spring Boot to EC2') {
     steps {
         script {
-            def privateKeyPath = "${WORKSPACE}\\ssh-key.pem"
+            withCredentials([sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'SSH_KEY')]) {
+                bat """
+                echo Stopping any running application on EC2...
+                ssh -o StrictHostKeyChecking=no -i \"%SSH_KEY%\" %EC2_USER%@%EC2_HOST% "sudo pkill -f 'tourplanner.jar' || true"
+                
+                echo Uploading JAR file to EC2...
+                scp -o StrictHostKeyChecking=no -i \"%SSH_KEY%\" target/tourplanner-0.0.1-SNAPSHOT.jar %EC2_USER%@%EC2_HOST%:/home/ubuntu/tourplanner.jar
 
-            // Write the private key securely
-            writeFile file: privateKeyPath, text: PRIVATE_KEY.trim()
-
-            // Set correct permissions on Windows
-            bat """
-            icacls \"${privateKeyPath}\" /inheritance:r
-            icacls \"${privateKeyPath}\" /grant:r \"%USERNAME%:F\"
-            """
-
-            // Deploy to EC2
-            bat """
-            echo Stopping any running application on EC2...
-            ssh -o StrictHostKeyChecking=no -i \"${privateKeyPath}\" %EC2_USER%@%EC2_HOST% "sudo pkill -f 'tourplanner.jar' || true"
-            
-            echo Uploading JAR file to EC2...
-            scp -o StrictHostKeyChecking=no -i \"${privateKeyPath}\" target/tourplanner-0.0.1-SNAPSHOT.jar %EC2_USER%@%EC2_HOST%:/home/ubuntu/tourplanner.jar
-
-            echo Starting application...
-            ssh -o StrictHostKeyChecking=no -i \"${privateKeyPath}\" %EC2_USER%@%EC2_HOST% "export MONGO_URI=${MONGO_URI} && nohup java -jar /home/ubuntu/tourplanner.jar > /home/ubuntu/tourplanner.log 2>&1 &"
-            """
-
-            // Clean up the private key file after use
-            bat "del /F /Q \"${privateKeyPath}\""
+                echo Starting application...
+                ssh -o StrictHostKeyChecking=no -i \"%SSH_KEY%\" %EC2_USER%@%EC2_HOST% "export MONGO_URI=${MONGO_URI} && nohup java -jar /home/ubuntu/tourplanner.jar > /home/ubuntu/tourplanner.log 2>&1 &"
+                """
+            }
         }
     }
 }
+
     }  
 
     post {
