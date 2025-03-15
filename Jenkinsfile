@@ -71,7 +71,7 @@ pipeline {
         stage('Deploy Spring Boot to EC2') {
     steps {
         script {
-            withCredentials([sshUserPrivateKey(credentialsId: 'ec2-ssh-key', keyFileVariable: 'SSH_KEY')]) {
+            withCredentials([sshUserPrivateKey(credentialsId: 'AWS_PRIVATE_KEY', keyFileVariable: 'SSH_KEY')]) {
                 bat """
                 echo Stopping any running application on EC2...
                 ssh -o StrictHostKeyChecking=no -i \"%SSH_KEY%\" %EC2_USER%@%EC2_HOST% "sudo pkill -f 'tourplanner.jar' || true"
