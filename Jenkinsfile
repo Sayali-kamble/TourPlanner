@@ -10,7 +10,7 @@ pipeline {
         EC2_USER = 'ubuntu'
         EC2_HOST = '13.50.4.93'
 
-        
+        PRIVATE_KEY_PATH = credentials('AWS_PRIVATE_KEY')
         MONGO_URI = credentials('MONGO_ATLAS_URI')
     }
 
@@ -74,13 +74,13 @@ pipeline {
                 script {
                     bat """
                     echo Stopping any running application on EC2...
-                    ssh -o StrictHostKeyChecking=no -i "C:\\SSHKeys\\travelling.pem" %EC2_USER%@%EC2_HOST% "sudo pkill -f 'tourplanner.jar' || true"
+                    ssh -o StrictHostKeyChecking=no -i \"%PRIVATE_KEY_PATH%\" %EC2_USER%@%EC2_HOST% "sudo pkill -f 'tourplanner.jar' || true"
 
                     echo Uploading JAR file to EC2...
-                    scp -o StrictHostKeyChecking=no -i "C:\\SSHKeys\\travelling.pem" target/tourplanner-0.0.1-SNAPSHOT.jar %EC2_USER%@%EC2_HOST%:/home/ubuntu/tourplanner.jar
+                    scp -o StrictHostKeyChecking=no -i \"%PRIVATE_KEY_PATH%\" target/tourplanner-0.0.1-SNAPSHOT.jar %EC2_USER%@%EC2_HOST%:/home/ubuntu/tourplanner.jar
 
                     echo Starting application...
-                    ssh -o StrictHostKeyChecking=no -i "C:\\SSHKeys\\travelling.pem" %EC2_USER%@%EC2_HOST% "export MONGO_URI=\\"$MONGO_URI\\" && nohup java -jar /home/ubuntu/tourplanner.jar > /home/ubuntu/tourplanner.log 2>&1 &"
+                    ssh -o StrictHostKeyChecking=no -i \"%PRIVATE_KEY_PATH%\" %EC2_USER%@%EC2_HOST% "export MONGO_URI=\\"$MONGO_URI\\" && nohup java -jar /home/ubuntu/tourplanner.jar > /home/ubuntu/tourplanner.log 2>&1 &"
                     """
                 }
             }
