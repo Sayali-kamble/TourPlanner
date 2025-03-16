@@ -72,9 +72,7 @@ pipeline {
         stage('Deploy Spring Boot to EC2') {
             steps {
                 script {
-                    // Ensure the temp directory exists
-                    bat 'mkdir D:\\temp'
-
+                    
                     withCredentials([sshUserPrivateKey(credentialsId: 'AWS_PRIVATE_KEY', keyFileVariable: 'SSH_KEY')]) {
                         // Convert the SSH private key to a file on disk for use with ssh and scp commands
                         writeFile file: 'D:\\temp\\ssh_key.pem', text: SSH_KEY
