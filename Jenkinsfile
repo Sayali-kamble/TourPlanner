@@ -70,24 +70,34 @@ pipeline {
         }
 
         stage('Deploy Spring Boot to EC2') {
-    steps {
-        script {
-            withCredentials([sshUserPrivateKey(credentialsId: 'AWS_PRIVATE_KEY', keyFileVariable: 'SSH_KEY')]) {
-                bat """
-                echo Stopping any running application on EC2...
-                ssh -o StrictHostKeyChecking=no -i \"%SSH_KEY%\" %EC2_USER%@%EC2_HOST% "sudo pkill -f 'tourplanner.jar' || true"
+            steps {
+                script {
+                    // Ensure the temp directory exists
+                    bat 'mkdir D:\\temp'
 
-                echo Uploading JAR file to EC2...
-                scp -o StrictHostKeyChecking=no -i \"%SSH_KEY%\" target/tourplanner-0.0.1-SNAPSHOT.jar %EC2_USER%@%EC2_HOST%:/home/ubuntu/tourplanner.jar
+                    withCredentials([sshUserPrivateKey(credentialsId: 'AWS_PRIVATE_KEY', keyFileVariable: 'SSH_KEY')]) {
+                        // Convert the SSH private key to a file on disk for use with ssh and scp commands
+                        writeFile file: 'D:\\temp\\ssh_key.pem', text: SSH_KEY
 
-                echo Starting application...
-                ssh -o StrictHostKeyChecking=no -i \"%SSH_KEY%\" %EC2_USER%@%EC2_HOST% "export MONGO_URI=\\"$MONGO_URI\\" && nohup java -jar /home/ubuntu/tourplanner.jar > /home/ubuntu/tourplanner.log 2>&1 &"
-                """
+                        bat """
+                        echo Stopping any running application on EC2...
+                        ssh -o StrictHostKeyChecking=no -i "D:\\temp\\ssh_key.pem" %EC2_USER%@%EC2_HOST% "sudo pkill -f 'tourplanner.jar' || true"
+
+                        echo Uploading JAR file to EC2...
+                        scp -o StrictHostKeyChecking=no -i "D:\\temp\\ssh_key.pem" target/tourplanner-0.0.1-SNAPSHOT.jar %EC2_USER%@%EC2_HOST%:/home/ubuntu/tourplanner.jar
+
+                        echo Starting application...
+                        ssh -o StrictHostKeyChecking=no -i "D:\\temp\\ssh_key.pem" %EC2_USER%@%EC2_HOST% "export MONGO_URI=\\"$MONGO_URI\\" && nohup java -jar /home/ubuntu/tourplanner.jar > /home/ubuntu/tourplanner.log 2>&1 &"
+                        """
+
+                        // Clean up the temporary SSH key after deployment
+                        bat 'del /f /q D:\\temp\\ssh_key.pem'
+                    }
+                }
             }
         }
     }
-}
-    }
+
     post {
         always {
             echo 'Cleaning up...'
