@@ -9,7 +9,6 @@ pipeline {
         AWS_S3_BUCKET = 'awstripbucket'  
         EC2_USER = 'ubuntu'
         EC2_HOST = '13.50.4.93'
-
         
         MONGO_URI = credentials('MONGO_ATLAS_URI')
     }
@@ -72,22 +71,18 @@ pipeline {
         stage('Deploy Spring Boot to EC2') {
             steps {
                 script {
-                    // Use ssh-agent to load the SSH private key and use it directly for SSH commands
-                    withCredentials([sshUserPrivateKey(credentialsId: 'AWS_PRIVATE_KEY', keyFileVariable: 'SSH_KEY')]) {
-                        sshagent([SSH_KEY]) {
-                            // Perform the SSH operations (no need to write key to disk)
-                            bat """
-                            echo Stopping any running application on EC2...
-                            ssh -o StrictHostKeyChecking=no %EC2_USER%@%EC2_HOST% "sudo pkill -f 'tourplanner.jar' || true"
+                    bat """
+                    echo Stopping any running application on EC2...
+                    ssh -o StrictHostKeyChecking=no -i "C:\Users\admin\.ssh\travelling.pem" %EC2_USER%@%EC2_HOST% "sudo kill \$(pgrep -f 'java -jar') || true"
 
-                            echo Uploading JAR file to EC2...
-                            scp -o StrictHostKeyChecking=no target/tourplanner-0.0.1-SNAPSHOT.jar %EC2_USER%@%EC2_HOST%:/home/ubuntu/tourplanner.jar
+                    echo Uploading JAR file to EC2...
+                    scp -o StrictHostKeyChecking=no -i ""C:\Users\admin\.ssh\travelling.pem"" target/tourplanner-0.0.1-SNAPSHOT.jar %EC2_USER%@%EC2_HOST%:/home/ubuntu/tourplanner.jar
 
-                            echo Starting application...
-                            ssh -o StrictHostKeyChecking=no %EC2_USER%@%EC2_HOST% "export MONGO_URI=\\"$MONGO_URI\\" && nohup java -jar /home/ubuntu/tourplanner.jar > /home/ubuntu/tourplanner.log 2>&1 &"
-                            """
-                        }
-                    }
+                    echo Starting application...
+                    ssh -o StrictHostKeyChecking=no -i ""C:\Users\admin\.ssh\travelling.pem"" %EC2_USER%@%EC2_HOST% "nohup java -jar /home/ubuntu/tourplanner.jar > /home/ubuntu/tourplanner.log 2>&1 &"
+
+                    echo Deployment completed!
+                    """
                 }
             }
         }
