@@ -78,13 +78,13 @@ pipeline {
                             // Perform the SSH operations (no need to write key to disk)
                             bat """
                             echo Stopping any running application on EC2...
-                            ssh -o StrictHostKeyChecking=no -i "\${SSH_KEY}" %EC2_USER%@%EC2_HOST% "sudo pkill -f 'tourplanner.jar' || true"
+                            ssh -o StrictHostKeyChecking=no %EC2_USER%@%EC2_HOST% "sudo pkill -f 'tourplanner.jar' || true"
 
                             echo Uploading JAR file to EC2...
-                            scp -o StrictHostKeyChecking=no -i "\${SSH_KEY}" target/tourplanner-0.0.1-SNAPSHOT.jar %EC2_USER%@%EC2_HOST%:/home/ubuntu/tourplanner.jar
+                            scp -o StrictHostKeyChecking=no target/tourplanner-0.0.1-SNAPSHOT.jar %EC2_USER%@%EC2_HOST%:/home/ubuntu/tourplanner.jar
 
                             echo Starting application...
-                            ssh -o StrictHostKeyChecking=no -i "\${SSH_KEY}" %EC2_USER%@%EC2_HOST% "export MONGO_URI=\\"$MONGO_URI\\" && nohup java -jar /home/ubuntu/tourplanner.jar > /home/ubuntu/tourplanner.log 2>&1 &"
+                            ssh -o StrictHostKeyChecking=no %EC2_USER%@%EC2_HOST% "export MONGO_URI=\\"$MONGO_URI\\" && nohup java -jar /home/ubuntu/tourplanner.jar > /home/ubuntu/tourplanner.log 2>&1 &"
                             """
                         }
                     }
