@@ -41,10 +41,11 @@ Before running the project, make sure you have:
    ```
 4️⃣ **Access the Application:**
    - API Base URL: [`http://localhost:8080`](http://localhost:8080)  
-   - React Frontend (if applicable): [`http://localhost:3000`](http://localhost:3000
+   - React Frontend (if applicable): [`http://localhost:3000`](http://localhost:3000)
 
 ## Get in Touch
 Developed by **Sayali Kamble**  
 🔗 GitHub: [Sayali-kamble](https://github.com/Sayali-kamble)  
 
 🌎 *Plan smart, travel better!* ✈️
+
