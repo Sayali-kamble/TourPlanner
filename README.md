@@ -33,7 +33,7 @@ Before running the project, make sure you have:
 2️⃣ **Configure Database:**
    - Create a MySQL database named `tourplanner`
    - Update `application.properties` with your database credentials
-   - 
+     
 3️⃣ **Run the Application:**
    ```bash
    mvn clean install
@@ -48,4 +48,5 @@ Developed by **Sayali Kamble**
 🔗 GitHub: [Sayali-kamble](https://github.com/Sayali-kamble)  
 
 🌎 *Plan smart, travel better!* ✈️
+
 
